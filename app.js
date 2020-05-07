@@ -5,7 +5,9 @@ const bodyParser = require('body-parser');
 const ejs = require('ejs');
 const mongoose = require('mongoose');
 // const encrypt = require('mongoose-encryption')
-const md5 = require('md5');
+// const md5 = require('md5');
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 
 const app = express();
 
@@ -40,39 +42,48 @@ app.get('/login', (req,res) => {
 
 
 app.post('/register', (req, res) => {
-    const newUser = new userMod({
-        email: req.body.username,
-        password: md5(req.body.password)
-    });
 
-    newUser.save((err) => {
-        if(err)
-            console.log(err);
-        else
-            res.render('secrets');
-    });
+    bcrypt.hash(req.body.password, saltRounds, (err, hash) => {
+        const newUser = new userMod({
+            email: req.body.username,
+            // password: md5(req.body.password)
+            password: hash
+        });
+    
+        newUser.save((err) => {
+            if(err)
+                console.log(err);
+            else
+                res.render('secrets');
+        });
+    })
+    
 });
 
 app.post('/login', (req,res) => {
     const uName = req.body.username;
-    const uPass = md5(req.body.password);
+    // const uPass = md5(req.body.password);
+    // const uPass = req.body.password;
 
     userMod.findOne({email : uName}, (err, foundUser) => {
         if(err){
             console.log(err);
         } else {
             if(foundUser){
-                if(foundUser.password === uPass){
-                    res.render('secrets');
-                }else{
-                    res.send('Wrong password')
-                }
-            } else {
+                // if(foundUser.password === uPass){
+                bcrypt.compare(req.body.password, foundUser.password, (err, result) => {
+                    // result == true
+                    if(true){
+                        res.render('secrets');
+                    }else{
+                        res.send('Wrong password')
+                    }
+                });    
+                } else {
                 res.send('User not found');
-            }
-        }
-        
-    })
+                }
+        } 
+    });
 });
 
 
