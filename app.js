@@ -73,7 +73,7 @@ app.post('/login', (req,res) => {
                 // if(foundUser.password === uPass){
                 bcrypt.compare(req.body.password, foundUser.password, (err, result) => {
                     // result == true
-                    if(true){
+                    if(result === true){
                         res.render('secrets');
                     }else{
                         res.send('Wrong password')
